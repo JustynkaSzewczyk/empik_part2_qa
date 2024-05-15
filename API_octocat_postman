@@ -1,0 +1,37 @@
+// Sprawdzenie, czy odpowiedź została poprawnie odebrana
+if (pm.response && pm.response.json) {
+    // Sprawdzenie statusu odpowiedzi
+    pm.test("Status code is 200", function () {
+        pm.response.to.have.status(200);
+    });
+
+    // Sprawdzenie, czy w odpowiedzi jest pole "name"
+    pm.test("Response has 'name' field", function () {
+        pm.expect(pm.response.json()).to.have.property('name');
+    });
+
+    // Pobranie wartości pola "name" i zapisanie do zmiennej środowiskowej
+    pm.environment.set("userName", pm.response.json().name);
+
+    // Zapisz odpowiedź do pliku JSON
+    pm.sendRequest({
+        url: 'https://postman-echo.com/post',
+        method: 'POST',
+        header: {
+            'Content-Type': 'application/json'
+        },
+        body: {
+            mode: 'raw',
+            raw: JSON.stringify(pm.response.json())
+        }
+    }, function (err, res) {
+        if (err) {
+            console.error("Błąd podczas zapisywania odpowiedzi do pliku:", err);
+        } else {
+            console.log("Odpowiedź została zapisana do pliku:", res);
+        }
+    });
+} else {
+    // Jeśli odpowiedź jest niepoprawna, wyświetl komunikat w konsoli
+    console.error("Nie można przetworzyć odpowiedzi. Odpowiedź nie jest w formacie JSON lub nie została odebrana.");
+}
