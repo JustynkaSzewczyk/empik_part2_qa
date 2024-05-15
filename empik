@@ -1,0 +1,64 @@
+# PART_1(Klasa testowa)
+
+import io.restassured.RestAssured;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import static org.hamcrest.Matchers.*;
+
+public class GitHubAPITest {
+
+    @BeforeClass
+    public static void setup() {
+        RestAssured.baseURI = "https://api.github.com";
+    }
+
+    @Test
+    public void testGitHubUser() {
+        GitHubUserPage githubUserPage = new GitHubUserPage("/users/octocat");
+       
+        githubUserPage
+            .verifyStatusCode(200)
+            .verifyField("login", equalTo("octocat"))
+            .verifyField("name", equalTo("The Octocat"))
+            .verifyField("public_repos", greaterThan(0));
+    }
+}
+
+# PART_2(Klasa Page Object)
+
+import io.restassured.response.Response;
+
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+public class GitHubUserPage {
+
+    private String endpoint;
+
+    public GitHubUserPage(String endpoint) {
+        this.endpoint = endpoint;
+    }
+
+    public GitHubUserPage verifyStatusCode(int statusCode) {
+        Response response = given()
+            .when()
+            .get(endpoint)
+            .then()
+            .extract().response();
+       
+        assertThat("Status code is not as expected", response.statusCode(), equalTo(statusCode));
+        return this;
+    }
+
+    public GitHubUserPage verifyField(String field, Matcher<?> matcher) {
+        Response response = given()
+            .when()
+            .get(endpoint)
+            .then()
+            .extract().response();
+       
+        assertThat("Field " + field + " is not as expected", response.path(field), matcher);
+        return this;
+    }
+}
